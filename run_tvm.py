@@ -21,11 +21,11 @@ def bench(name, batch):
     sym, data_shape = get_network(name, batch)
     data_shape = data_shape[0][1]
     sym, _ = relay.frontend.from_mxnet(sym, {'data': data_shape})
-    sym, params = tvm.relay.testing.create_workload(sym)
+    sym, params = tvm.relay.testing.create_workload(sym["main"])
     with relay.quantize.qconfig(skip_k_conv=0, round_for_shift=True):
         sym = relay.quantize.quantize(sym, params)
 
-    with relay.build_module.build_config(opt_level=3):
+    with relay.build_config(opt_level=3):
         graph, lib, params = relay.build(sym, 'cuda', 'llvm', params=params)
 
     m = graph_runtime.create(graph, lib, ctx)
